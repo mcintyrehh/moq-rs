@@ -28,7 +28,7 @@ echo "Watch URL: https://quic.video/watch/$NAME?server=$ADDR"
 # Make sure we build the gstreamer plugin
 cargo build
 
-export GST_PLUGIN_PATH="${PWD}/target/debug${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
+export GST_PLUGIN_PATH="${PWD}/../target/debug${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
 #export GST_DEBUG=*:5
 
 # Download the Big Buck Bunny video if it doesn't exist
