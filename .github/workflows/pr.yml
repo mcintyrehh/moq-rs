@@ -19,6 +19,10 @@ jobs:
         with:
           components: clippy, rustfmt
 
+      # We need gstreamer installed to compile moq-gst-ietf
+      - name: Setup GStreamer
+        uses: blinemedical/setup-gstreamer@v1
+
       # Make sure u guys don't write bad code
       - run: cargo test --verbose
       - run: cargo clippy --no-deps
