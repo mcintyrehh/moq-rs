@@ -9,7 +9,7 @@ members = [
 	"moq-dir",
 	"moq-native-ietf",
 	"moq-catalog",
-	"moq-gst",
+	"moq-gst-ietf",
 ]
 resolver = "2"
 

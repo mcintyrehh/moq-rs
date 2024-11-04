@@ -1,5 +1,5 @@
 [package]
-name = "moq-gst"
+name = "moq-gst-ietf"
 description = "Media over QUIC - gstreamer plugin"
 authors = ["Luke Curley"]
 repository = "https://github.com/kixelated/moq-gst"
