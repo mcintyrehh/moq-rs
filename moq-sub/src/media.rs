@@ -55,6 +55,7 @@ impl<O: AsyncWrite + Send + Unpin + 'static> Media<O> {
 
 			let object = group.next().await?.context("no init fragment")?;
 			let buf = Self::recv_object(object).await?;
+			tracing::debug!("init fragment buf: {:?}", buf);
 			self.output.lock().await.write_all(&buf).await?;
 			let mut reader = Cursor::new(&buf);
 
@@ -132,9 +133,9 @@ impl<O: AsyncWrite + Send + Unpin + 'static> Media<O> {
 	}
 
 	async fn recv_group(mut group: GroupReader, out: Arc<Mutex<O>>) -> anyhow::Result<()> {
-		trace!("group={} start", group.group_id);
+		trace!("group_id={} start", group.group_id);
 		while let Some(object) = group.next().await? {
-			trace!("group={} fragment={} start", group.group_id, object.object_id);
+			trace!("group_id={} object_id={} start", group.group_id, object.object_id);
 			let out = out.clone();
 			let buf = Self::recv_object(object).await?;
 
@@ -145,10 +146,15 @@ impl<O: AsyncWrite + Send + Unpin + 'static> Media<O> {
 	}
 
 	async fn recv_object(mut object: GroupObjectReader) -> anyhow::Result<Vec<u8>> {
+		trace!("start recv_object of size {}", object.size);
 		let mut buf = Vec::with_capacity(object.size);
-		while let Some(chunk) = object.read().await? {
-			buf.extend_from_slice(&chunk);
-		}
+		// while let Some(chunk) = object.read().await? {
+		// 	buf.extend_from_slice(&chunk);
+		// }
+		let chunk = object.read_all().await?;
+		trace!("read {}, bytes", chunk.len());
+		buf.extend_from_slice(&chunk);
+		trace!("finish recv_object of size {}", object.size);
 		Ok(buf)
 	}
 }

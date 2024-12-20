@@ -88,9 +88,11 @@ impl Media {
 			}
 			mp4::BoxType::MoofBox => {
 				let moof = mp4::MoofBox::read_box(&mut reader, header.size)?;
+				tracing::debug!("Got moof: {:?}", moof);
 
 				// Process the moof.
 				let fragment = Fragment::new(moof)?;
+				tracing::debug!("Got fragment: {:?}", fragment);
 
 				if fragment.keyframe {
 					// Gross but thanks to rust we have to do a separate hashmap lookup
@@ -101,7 +103,13 @@ impl Media {
 						.handler == TrackType::Video
 					{
 						// Start a new group for the keyframe.
-						for track in self.tracks.values_mut() {
+						for (id, track) in self.tracks.iter_mut() {
+							tracing::debug!(
+								"Starting new group for track '{}' ID {} ({:?})",
+								track.track.info.name,
+								id,
+								track.handler,
+							);
 							track.end_group();
 						}
 					}
@@ -120,6 +128,7 @@ impl Media {
 			mp4::BoxType::MdatBox => {
 				// Get the track ID from the previous moof.
 				let track = self.current.take().context("missing moof")?;
+				tracing::debug!("writing mdat to track id {}", track);
 				let track = self.tracks.get_mut(&track).context("failed to find track")?;
 
 				// Publish the mdat atom.
@@ -362,6 +371,7 @@ impl Track {
 	}
 }
 
+#[derive(Debug)]
 struct Fragment {
 	// The track for this fragment.
 	track: u32,

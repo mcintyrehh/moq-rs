@@ -72,6 +72,7 @@ impl GroupsWriter {
 
 	// Helper to increment the group by one.
 	pub fn append(&mut self, priority: u8) -> Result<GroupWriter, ServeError> {
+		log::trace!("incrementing group_id to: {}", self.next);
 		self.create(Group {
 			group_id: self.next,
 			priority,
