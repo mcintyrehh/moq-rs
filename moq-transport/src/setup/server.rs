@@ -33,7 +33,9 @@ impl Decode for Server {
 		let mut params = Params::decode(r)?;
 
 		let role = params.get::<Role>(0)?.ok_or(DecodeError::MissingParameter)?;
-
+		let max_subscribe_id = params.get::<u64>(2)?.ok_or(DecodeError::MissingParameter)?;
+		// log max_subscribe_id
+		log::info!("max_subscribe_id = {:?}", max_subscribe_id);
 		// Make sure the PATH parameter isn't used
 		if params.has(1) {
 			return Err(DecodeError::InvalidParameter);
@@ -57,6 +59,8 @@ impl Encode for Server {
 		let mut params = self.params.clone();
 		params.set(0, self.role)?;
 		params.encode(&mut buf).unwrap();
+		//log buf.len()
+		log::info!("buf.len() = {:?}", buf.len());
 
 		(buf.len() as u64).encode(w)?;
 

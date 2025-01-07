@@ -51,4 +51,5 @@ publisher_msgs! {
 	SubscribeError,
 	SubscribeDone,
 	TrackStatus,
+	MaxSubscribeId,
 }

@@ -26,6 +26,8 @@ pub struct Subscriber {
 	subscribe_next: Arc<atomic::AtomicU64>,
 
 	outgoing: Queue<Message>,
+
+	max_subscribe_id: Option<u64>,
 }
 
 impl Subscriber {
@@ -36,6 +38,7 @@ impl Subscriber {
 			subscribes: Default::default(),
 			subscribe_next: Default::default(),
 			outgoing,
+			max_subscribe_id: Default::default(),
 		}
 	}
 
@@ -84,6 +87,7 @@ impl Subscriber {
 			message::Publisher::SubscribeError(msg) => self.recv_subscribe_error(msg),
 			message::Publisher::SubscribeDone(msg) => self.recv_subscribe_done(msg),
 			message::Publisher::TrackStatus(msg) => self.recv_track_status(msg),
+			message::Publisher::MaxSubscribeId(msg) => self.max_subscribe_id(msg),
 		};
 
 		if let Err(SessionError::Serve(err)) = res {
@@ -148,6 +152,16 @@ impl Subscriber {
 	fn recv_track_status(&mut self, _msg: &message::TrackStatus) -> Result<(), SessionError> {
 		// TODO: Expose this somehow?
 		// TODO: Also add a way to sent a Track Status Request in the first place
+
+		Ok(())
+	}
+
+	fn max_subscribe_id(&mut self, msg: &message::MaxSubscribeId) -> Result<(), SessionError> {
+		// @todo: uncomment this when we enable moq-transport/src/error.rs
+		// if (self.max_subscribe_id >= Some(msg.id)) {
+		// 	return Err(SessionError::ProtocolViolation);
+		// }
+		self.max_subscribe_id = Some(msg.id);
 
 		Ok(())
 	}

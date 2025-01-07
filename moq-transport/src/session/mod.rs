@@ -153,7 +153,7 @@ impl Session {
 		let server = setup::Server {
 			role,
 			version: setup::Version::DRAFT_06,
-			params: Default::default(),
+			params: client.params,
 		};
 
 		log::debug!("sending server SETUP: {:?}", server);

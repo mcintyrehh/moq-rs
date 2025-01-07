@@ -206,9 +206,11 @@ message_types! {
 
 	// NAMESPACE family, sent by subscriber
 	SubscribeNamespace = 0x11,
+	UnsubscribeNamespace = 0x14,
+
+	// NAMESPACE family, sent by publisher
 	SubscribeNamespaceOk = 0x12,
 	SubscribeNamespaceError = 0x13,
-	UnsubscribeNamespace = 0x14,
 }
 
 /// Track Status Codes
