@@ -17,6 +17,7 @@ pub struct Media {
     // The init and catalog tracks
     init: SubgroupsWriter,
     catalog: SubgroupsWriter,
+    timeline: Option<SubgroupWriter>,
 
     // The ftyp and moov atoms at the start of the file.
     ftyp: Option<Bytes>,
@@ -36,11 +37,17 @@ impl Media {
             .create("0.mp4")
             .context("broadcast closed")?
             .groups()?;
+        let timeline = broadcast
+            .create(".timeline")
+            .context("broadcast closed")?
+            .groups()?
+            .append(0)?;
 
         Ok(Media {
             tracks: Default::default(),
             broadcast,
             catalog,
+            timeline:Some(timeline),
             init,
             ftyp: None,
             moov: None,
@@ -245,10 +252,16 @@ impl Media {
 
             tracks.push(track);
 
+            let timeline = match handler {
+                TrackType::Video => Some(self.timeline.take().context("missing timeline")?),
+                _ => None,
+            };
+            // @todo: create timeline per track
             // Store the track publisher in a map so we can update it later.
             let track = self.broadcast.create(&name).context("broadcast closed")?;
-            let track = Track::new(track, handler, timescale);
+            let track = Track::new(track, handler, timescale, timeline);
             self.tracks.insert(id, track);
+
         }
 
         let catalog = moq_catalog::Root {
@@ -320,7 +333,7 @@ struct Track {
     // The track we're producing
     track: SubgroupsWriter,
 
-    // The current segment
+    // The current (sub)group
     current: Option<SubgroupWriter>,
 
     // The number of units per second.
@@ -328,15 +341,19 @@ struct Track {
 
     // The type of track, ex. "vide" or "soun"
     handler: TrackType,
+
+    // The timeline for this track
+    timeline: Option<SubgroupWriter>,
 }
 
 impl Track {
-    fn new(track: TrackWriter, handler: TrackType, timescale: u64) -> Self {
+    fn new(track: TrackWriter, handler: TrackType, timescale: u64, timeline: Option<SubgroupWriter>) -> Self {
         Self {
             track: track.groups().unwrap(),
             current: None,
             timescale,
             handler,
+            timeline,
         }
     }
 
@@ -347,13 +364,19 @@ impl Track {
             return Ok(());
         }
 
-        // Otherwise make a new segment
+        // Otherwise make a new group
 
-        let _timestamp: u32 = fragment
+        let timestamp: u32 = fragment
             .timestamp(self.timescale)
             .as_millis()
             .try_into()
             .context("timestamp too large")?;
+
+        // we can write to the timeline here, bc we're creating a new group
+        if let Some(timeline) = self.timeline.as_mut() {
+            timeline.write(format!("{},{}\n", 1, timestamp).into())?; //todo: find out actual group number
+        }
+
         // Prioritize each group equally for now
         // (A u8 doesn't give us granularity for ms since epoch)
         // TODO: Revisit post draft-05 prioritization
