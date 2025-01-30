@@ -57,6 +57,9 @@ pub struct Track {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub depends: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeline: Option<String>,
 }
 
 impl Track {

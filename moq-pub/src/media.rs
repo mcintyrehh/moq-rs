@@ -250,12 +250,15 @@ impl Media {
 
             track.selection_params = selection_params;
 
-            tracks.push(track);
-
             let timeline = match handler {
-                TrackType::Video => Some(self.timeline.take().context("missing timeline")?),
+                TrackType::Video => {
+                    track.timeline = Some(".timeline".to_string());
+                    Some(self.timeline.take().context("missing timeline")?)},
                 _ => None,
             };
+
+            tracks.push(track);
+
             // @todo: create timeline per track
             // Store the track publisher in a map so we can update it later.
             let track = self.broadcast.create(&name).context("broadcast closed")?;
@@ -372,9 +375,9 @@ impl Track {
             .try_into()
             .context("timestamp too large")?;
 
-        // we can write to the timeline here, bc we're creating a new group
         if let Some(timeline) = self.timeline.as_mut() {
-            timeline.write(format!("{},{}\n", 1, timestamp).into())?; //todo: find out actual group number
+            //todo: use actual group number
+            timeline.write(format!("{},{}\n", 1, timestamp).into())?;
         }
 
         // Prioritize each group equally for now
